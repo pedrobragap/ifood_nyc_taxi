@@ -1,0 +1,11 @@
+# Core dependencies
+pyspark>=3.4.0
+delta-spark>=2.4.0
+
+# Testing dependencies
+pytest>=7.4.0
+pytest-spark>=0.6.0
+
+# Utilities
+requests>=2.31.0
+python-dotenv>=1.0.0

@@ -1,0 +1,22 @@
+resources:
+  jobs:
+    etl_nyc_taxi:
+      name: etl_nyc_taxi
+      tasks:
+        - task_key: Bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/pedrobraga85@gmail.com/ifood_nyc_taxi/src/bronze
+            source: WORKSPACE
+        - task_key: Silver
+          depends_on:
+            - task_key: Bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/pedrobraga85@gmail.com/ifood_nyc_taxi/src/silver
+            source: WORKSPACE
+      git_source:
+        git_url: https://github.com/pedrobragap/ifood_nyc_taxi/
+        git_provider: gitHub
+        git_branch: main
+      queue:
+        enabled: true
+      performance_target: STANDARD
