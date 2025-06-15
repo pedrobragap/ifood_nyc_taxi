@@ -89,6 +89,7 @@ Para executar o pipeline de dados:
    - O job executará primeiro a camada Bronze
    - Em seguida, executará a camada Silver
    - Você pode acompanhar o progresso em tempo real
+![Workflow timeline](docs/images/workflow_timeline.png)
 
 ### 2. Monitorando a Execução
 
