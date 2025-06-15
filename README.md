@@ -6,6 +6,10 @@ Este projeto implementa um pipeline de dados para processar registros de corrida
 
 ```
 ifood_nyc_taxi/
+├── analysis/
+│   ├── perguntas/
+│   │    ├──gold.ipynb
+│   ├──EDA.ipynb
 ├── src/
 │   ├── bronze.ipynb    # Camada de ingestão e transformação inicial
 │   ├── silver.ipynb    # Camada de refinamento e qualidade
@@ -40,77 +44,54 @@ ifood_nyc_taxi/
    - Clique em "Create"
    - O projeto será clonado automaticamente no seu workspace
 
-## Configuração do Pipeline
-
-O projeto usa um arquivo YAML (`elt_nyc_taxi.yaml`) para configuração. Você pode ajustar os seguintes parâmetros:
-
-```yaml
-# Configurações do Databricks
-databricks:
-  workspace: community
-  landing_path: "/dbfs/FileStore/nyc_taxi_trip_records"
-
-# Configurações das Camadas
-layers:
-  bronze:
-    schema: bronze
-    table: nyc_taxi_trip_records
-    partition_by: ["year", "month"]
-    
-  silver:
-    schema: silver
-    table: nyc_taxi_trip_records
-    partition_by: ["year", "month"]
-    filters:
-      year: 2023
-      start_month: 1
-      end_month: 5
-      min_amount: 0
-      min_passengers: 0
-    columns:
-      - VendorID
-      - passenger_count
-      - total_amount
-      - tpep_pickup_datetime
-      - tpep_dropoff_datetime
-      - taxi_color
-      - year
-      - month
-
-# Configurações dos Dados
-data:
-  source_url: "https://d37ci6vzurychx.cloudfront.net/trip-data"
-  taxi_colors: ["yellow", "green"]
-  year: 2023
-  months: [1, 2, 3, 4, 5]
-```
+4. **Configurar o Job**:
+   - No menu lateral, clique em "Workflows"
+   - Clique em "Create Job"
+   - Clique nos três pontos (...) no canto superior direito
+   - Selecione "Edit YAML"
+   - Cole o seguinte YAML:
+   - deve subistituir o email_usuario para o email que criou a conta
+     ```resources:
+        jobs:
+            New_Job_Jun_14_2025_06_35_PM:
+            name: New Job Jun 14, 2025, 06:35 PM
+            tasks:
+                - task_key: bronze
+                notebook_task:
+                    notebook_path: /Workspace/Users/{email_usuario}/ifood_nyc_taxi/src/bronze
+                    source: WORKSPACE
+                - task_key: silver
+                depends_on:
+                    - task_key: bronze
+                notebook_task:
+                    notebook_path: /Workspace/Users/{email_usuario}/ifood_nyc_taxi/src/silver
+                    source: WORKSPACE
+            queue:
+                enabled: true
+            performance_target: STANDARD```
 
 ## Como Usar
 
-### 1. Camada Bronze
+### 1. Executando o Workflow
 
-O notebook `bronze.ipynb` é responsável por:
-- Baixar os dados de táxi amarelo e verde de NYC
-- Aplicar transformações iniciais
-- Armazenar os dados em formato Delta Lake
+Para executar o pipeline de dados:
 
-Para executar:
-1. Abra o notebook `bronze.ipynb`
-2. As configurações são carregadas automaticamente do arquivo YAML
-3. Execute todas as células
+1. No menu lateral, clique em "Workflows"
+2. Localize o job "etl_nyc_taxi"
+3. Clique no botão "Run Now" (▶️)
+4. Aguarde a execução completa
+   - O job executará primeiro a camada Bronze
+   - Em seguida, executará a camada Silver
+   - Você pode acompanhar o progresso em tempo real
 
-### 2. Camada Silver
+### 2. Monitorando a Execução
 
-O notebook `silver.ipynb` é responsável por:
-- Ler dados da camada bronze
-- Aplicar regras de qualidade
-- Remover duplicatas
-- Criar uma versão refinada dos dados
-
-Para executar:
-1. Abra o notebook `silver.ipynb`
-2. As configurações são carregadas automaticamente do arquivo YAML
-3. Execute todas as células
+Durante a execução, você pode:
+- Ver o status de cada task (Bronze e Silver)
+- Acessar os logs de execução
+- Verificar os dados processados nas tabelas:
+  - Bronze: `bronze.nyc_taxi_bronze`
+  - Silver: `silver.nyc_taxi_silver`
 
 ### 3. Executando os Testes
 
@@ -124,24 +105,6 @@ Para executar os testes automatizados:
    suite = unittest.TestLoader().loadTestsFromTestCase(TestTaxiPipeline)
    unittest.TextTestRunner(verbosity=2).run(suite)
    ```
-
-## Limitações do Community Edition
-
-1. **Recursos**:
-   - Cluster único com recursos limitados
-   - Tempo de execução limitado (2 horas por sessão)
-   - Armazenamento limitado
-
-2. **Funcionalidades**:
-   - Sem suporte a Volumes (use DBFS)
-   - Sem suporte a Jobs
-   - Sem suporte a Repos
-   - Sem suporte a MLflow
-
-3. **Recomendações**:
-   - Reduza o volume de dados para testes
-   - Use particionamento para melhor performance
-   - Faça backup dos dados importantes
 
 ## Estrutura dos Dados
 
@@ -168,38 +131,3 @@ Para executar os testes automatizados:
 - `taxi_color`: Cor do táxi (yellow/green)
 - `year`: Ano da corrida
 - `month`: Mês da corrida
-
-## Monitoramento
-
-Para monitorar o pipeline:
-1. Verifique as tabelas no catálogo do Databricks
-2. Use o comando `DESCRIBE HISTORY` para ver o histórico de alterações:
-   ```sql
-   DESCRIBE HISTORY bronze.nyc_taxi_trip_records;
-   DESCRIBE HISTORY silver.nyc_taxi_trip_records;
-   ```
-
-## Troubleshooting
-
-1. **Erro de timeout**:
-   - Reduza o volume de dados
-   - Divida o processamento em partes menores
-   - Reinicie a sessão se necessário
-
-2. **Erro de memória**:
-   - Reduza o tamanho dos lotes de processamento
-   - Use particionamento mais granular
-   - Limpe dados temporários
-
-3. **Erro de conexão**:
-   - Verifique a conexão com a internet
-   - Verifique se as URLs dos dados estão acessíveis
-   - Reinicie a sessão se necessário
-
-## Contribuindo
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -am 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Crie um Pull Request
