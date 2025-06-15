@@ -78,8 +78,12 @@ Para executar o pipeline de dados:
 
 1. No menu lateral, clique em "Workflows"
 2. Localize o job "etl_nyc_taxi"
-3. Clique no botão "Run Now" (▶️)
-4. Aguarde a execução completa
+3. Clique no botão "Run now with different settings"
+4. Coloque as datas de incio e fim
+    - `"start_date": "2023-01-01"`
+    - `"end_date": "2023-05-31"`
+![Pipeline Architecture](docs/images/workflow_screen.png)
+5. Aguarde a execução completa
    - O job executará primeiro a camada Bronze
    - Em seguida, executará a camada Silver
    - Você pode acompanhar o progresso em tempo real
@@ -122,7 +126,7 @@ Para executar os testes automatizados:
 
 ### Camada Bronze
 - Dados brutos com todas as colunas originais
-- Particionado por ano e mês
+- Particionado pela dt_partition
 - Mantém o histórico completo
 
 ### Camada Silver
@@ -130,8 +134,9 @@ Para executar os testes automatizados:
 - Filtros de qualidade aplicados:
   - `total_amount > 0`
   - `passenger_count > 0`
+  - `tpep_pickup_datetime between(start_date, end_date)`
 - Sem duplicatas
-- Particionado por ano e mês
+- Particionado pela dt_partition
 
 ## Colunas Principais
 
@@ -141,8 +146,7 @@ Para executar os testes automatizados:
 - `tpep_dropoff_datetime`: Data/hora de fim da corrida
 - `total_amount`: Valor total da corrida
 - `taxi_color`: Cor do táxi (yellow/green)
-- `year`: Ano da corrida
-- `month`: Mês da corrida
+- `dt_partition`: Data de particionamento
 
 ## Perguntas e Respostas
    - Qual a média de valor total (**total_amount**) recebido em um mês
