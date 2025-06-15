@@ -98,7 +98,7 @@ def write_delta(self, df: DataFrame, schema: str, table: str):
     (
         df.write
           .format("delta")
-          .mode("append")
+          .mode("overwrite")
           .option("mergeSchema", "true")
           .partitionBy("partition_date")
           .saveAsTable(f"{schema}.{table}")
