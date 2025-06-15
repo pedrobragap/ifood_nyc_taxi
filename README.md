@@ -17,6 +17,8 @@ ifood_nyc_taxi/
 │   └── elt_nyc_taxi.yaml # Configurações do pipeline
 └── requirements.txt    # Dependências do projeto
 ```
+## Arquitetura
+![Pipeline Architecture](docs/images/desenho.png)
 
 ## Pré-requisitos
 
@@ -82,7 +84,7 @@ Para executar o pipeline de dados:
 4. Coloque as datas de incio e fim
     - `"start_date": "2023-01-01"`
     - `"end_date": "2023-05-31"`
-![Pipeline Architecture](docs/images/workflow_screen.png)
+![Workflow](docs/images/workflow_screen.png)
 5. Aguarde a execução completa
    - O job executará primeiro a camada Bronze
    - Em seguida, executará a camada Silver
