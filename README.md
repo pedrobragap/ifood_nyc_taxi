@@ -96,15 +96,27 @@ Durante a execução, você pode:
 ### 3. Executando os Testes
 
 Para executar os testes automatizados:
-1. Abra um novo notebook
+1. Abra um terminal
 2. Execute:
-   ```python
-   from test_pipeline import TestTaxiPipeline
-   import unittest
-   
-   suite = unittest.TestLoader().loadTestsFromTestCase(TestTaxiPipeline)
-   unittest.TextTestRunner(verbosity=2).run(suite)
+   ```pip install -r requirements.txt
+      pytest
    ```
+3. Resultado:
+    ````
+    =================================================== test session starts ===================================================
+    platform darwin -- Python 3.9.6, pytest-8.4.0, pluggy-1.6.0 -- /Users/pedrox/ifood_nyc_taxi/venv/bin/python3
+    cachedir: .pytest_cache
+    rootdir: /Users/pedrox/ifood_nyc_taxi
+    collected 4 items                                                                                                         
+
+    test/test_bronze.py::test_month_range_basic PASSED                                                                  [ 25%]
+    test/test_bronze.py::test_prepare_df_renames_and_casts PASSED                                                       [ 50%]
+    test/test_silver.py::test_prepare_silver_df_filters_and_casts PASSED                                                [ 75%]
+    test/test_silver.py::test_prepare_silver_df_empty_when_no_data_in_range PASSED                                      [100%]
+
+    =================================================== 4 passed in 10.18s ====================================================
+
+    ```
 
 ## Estrutura dos Dados
 
