@@ -97,8 +97,8 @@ Durante a execução, você pode:
 - Ver o status de cada task (Bronze e Silver)
 - Acessar os logs de execução
 - Verificar os dados processados nas tabelas:
-  - Bronze: `bronze.nyc_taxi_bronze`
-  - Silver: `silver.nyc_taxi_silver`
+  - Bronze: `bronze.nyc_taxi_trip_records`
+  - Silver: `silver.nyc_taxi_trip_records`
 
 ### 3. Executando os Testes
 
