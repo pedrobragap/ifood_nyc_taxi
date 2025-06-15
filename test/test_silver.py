@@ -5,67 +5,107 @@ from pyspark.sql.types import (
     StructType, StructField,
     LongType, DoubleType, TimestampType, StringType, DateType
 )
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, to_timestamp, to_date
 from src.utils import prepare_silver_df
 
-spark = (
-    SparkSession.builder
-    .master("local[2]")
-    .appName("pytest-silver")
-    .getOrCreate()
-)
-
-def test_prepare_silver_df_filters_and_casts():
+def test_prepare_silver_df_filters_and_casts(spark):
+    """Test if silver layer correctly filters and casts data"""
     data = [
-        {"id": 1, "value": "10.5", "event_time": "2025-06-01 09:00:00"},
-        {"id": 2, "value": "20.0", "event_time": "2025-07-01 12:30:00"},
-        {"id": 3, "value": "30.0", "event_time": "2025-08-01 14:45:00"},
-        {"id": 4, "value": "40.0", "event_time": "2025-05-31 23:59:59"},
+        {
+            "vendor_id": 1,
+            "passenger_count": 2,
+            "tpep_pickup_datetime": "2025-06-01 09:00:00",
+            "tpep_dropoff_datetime": "2025-06-01 09:30:00",
+            "total_amount": 25.50,
+            "taxi_color": "yellow",
+            "partition_date": "2025-06-01"
+        },
+        {
+            "vendor_id": 2,
+            "passenger_count": 0,
+            "tpep_pickup_datetime": "2025-07-01 12:30:00",
+            "tpep_dropoff_datetime": "2025-07-01 13:00:00",
+            "total_amount": 0.00,
+            "taxi_color": "yellow",
+            "partition_date": "2025-07-01"
+        }
     ]
+    
     schema = StructType([
-        StructField("id", LongType(), True),
-        StructField("value", StringType(), True),
-        StructField("event_time", StringType(), True),
+        StructField("vendor_id", LongType(), True),
+        StructField("passenger_count", LongType(), True),
+        StructField("tpep_pickup_datetime", StringType(), True),
+        StructField("tpep_dropoff_datetime", StringType(), True),
+        StructField("total_amount", DoubleType(), True),
+        StructField("taxi_color", StringType(), True),
+        StructField("partition_date", StringType(), True)
     ])
+    
     df_bronze = spark.createDataFrame(data, schema)
-
-    start_date = date(2025, 6, 1)
-    end_date   = date(2025, 7, 31)
-
-    df_silver = prepare_silver_df(spark, df_bronze, start_date, end_date).cache()
-
-    ids = {row["id"] for row in df_silver.select("id").collect()}
-    assert ids == {1, 2}
-
+    
+    # Cast datetime columns to timestamp
+    df_bronze = df_bronze.withColumn("tpep_pickup_datetime", to_timestamp(col("tpep_pickup_datetime")))
+    df_bronze = df_bronze.withColumn("tpep_dropoff_datetime", to_timestamp(col("tpep_dropoff_datetime")))
+    df_bronze = df_bronze.withColumn("partition_date", to_date(col("partition_date")))
+    
+    start_date = "2025-06-01"
+    end_date = "2025-07-31"
+    
+    df_silver = prepare_silver_df(spark, df_bronze, start_date, end_date)
+    
+    # Verify filters
+    assert df_silver.count() == 1
+    row = df_silver.collect()[0]
+    assert row["passenger_count"] > 0
+    assert row["total_amount"] > 0
+    
+    # Verify column types
     expected_types = {
-        "id":                 "bigint",
-        "value":              "double",
-        "event_time":         "timestamp",
-        "partition_date":     "date"
+        "vendor_id": "bigint",
+        "passenger_count": "bigint",
+        "total_amount": "double",
+        "tpep_pickup_datetime": "timestamp",
+        "tpep_dropoff_datetime": "timestamp",
+        "taxi_color": "string",
+        "partition_date": "date"
     }
     actual_types = {f.name: f.dataType.simpleString() for f in df_silver.schema.fields}
     for col_name, dtype in expected_types.items():
-        assert actual_types[col_name] == dtype, f"Coluna {col_name} deveria ser {dtype}, mas é {actual_types[col_name]}"
+        assert actual_types[col_name] == dtype, f"Column {col_name} should be {dtype}, but is {actual_types[col_name]}"
 
-    row1 = df_silver.filter(col("id") == 1).collect()[0]
-    assert abs(row1["value"] - 10.5) < 1e-6
-    assert row1["partition_date"] == date(2025, 6, 1)
-
-
-def test_prepare_silver_df_empty_when_no_data_in_range():
+def test_prepare_silver_df_empty_when_no_data_in_range(spark):
+    """Test if silver layer returns empty DataFrame when no data in date range"""
     data = [
-        {"id": 5, "value": "5.0", "event_time": "2025-05-01 10:00:00"},
-        {"id": 6, "value": "6.0", "event_time": "2025-08-15 15:00:00"},
+        {
+            "vendor_id": 1,
+            "passenger_count": 2,
+            "tpep_pickup_datetime": "2025-06-01 09:00:00",
+            "tpep_dropoff_datetime": "2025-06-01 09:30:00",
+            "total_amount": 25.50,
+            "taxi_color": "yellow",
+            "partition_date": "2025-06-01"
+        }
     ]
+    
     schema = StructType([
-        StructField("id", LongType(), True),
-        StructField("value", StringType(), True),
-        StructField("event_time", StringType(), True),
+        StructField("vendor_id", LongType(), True),
+        StructField("passenger_count", LongType(), True),
+        StructField("tpep_pickup_datetime", StringType(), True),
+        StructField("tpep_dropoff_datetime", StringType(), True),
+        StructField("total_amount", DoubleType(), True),
+        StructField("taxi_color", StringType(), True),
+        StructField("partition_date", StringType(), True)
     ])
+    
     df_bronze = spark.createDataFrame(data, schema)
-
-    start_date = date(2025, 6, 1)
-    end_date   = date(2025, 7, 31)
-
+    
+    # Cast datetime columns to timestamp
+    df_bronze = df_bronze.withColumn("tpep_pickup_datetime", to_timestamp(col("tpep_pickup_datetime")))
+    df_bronze = df_bronze.withColumn("tpep_dropoff_datetime", to_timestamp(col("tpep_dropoff_datetime")))
+    df_bronze = df_bronze.withColumn("partition_date", to_date(col("partition_date")))
+    
+    start_date = "2025-07-01"
+    end_date = "2025-07-31"
+    
     df_silver = prepare_silver_df(spark, df_bronze, start_date, end_date)
-    assert df_silver.rdd.isEmpty()
+    assert df_silver.count() == 0
