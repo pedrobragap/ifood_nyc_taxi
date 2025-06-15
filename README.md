@@ -123,7 +123,7 @@ Para executar os testes automatizados:
 
 ## Colunas Principais
 
-- `VendorID`: ID do fornecedor
+- `vendor_id`: ID do fornecedor
 - `passenger_count`: Número de passageiros
 - `tpep_pickup_datetime`: Data/hora de início da corrida
 - `tpep_dropoff_datetime`: Data/hora de fim da corrida
@@ -131,3 +131,54 @@ Para executar os testes automatizados:
 - `taxi_color`: Cor do táxi (yellow/green)
 - `year`: Ano da corrida
 - `month`: Mês da corrida
+
+## Perguntas e Respostas
+   - Qual a média de valor total (**total_amount**) recebido em um mês
+considerando todos os yellow táxis da frota?
+
+   ```
+      +---------------------+----------------+
+      |month(partition_date)|avg_total_amount|
+      +---------------------+----------------+
+      |                    1|           27.46|
+      |                    2|           27.37|
+      |                    3|           28.29|
+      |                    4|           28.78|
+      |                    5|           29.47|
+      +---------------------+----------------+
+   ```
+
+   - Qual a média de passageiros (passenger_count) por cada hora do dia que pegaram táxi no mês de maio considerando todos os táxis da frota?
+
+   ```
+      +-----------+-------------------+
+      |hour_of_day|avg_passenger_count|
+      +-----------+-------------------+
+      |          0|               1.43|
+      |          1|               1.44|
+      |          2|               1.45|
+      |          3|               1.45|
+      |          4|               1.40|
+      |          5|               1.29|
+      |          6|               1.26|
+      |          7|               1.28|
+      |          8|               1.29|
+      |          9|               1.31|
+      |         10|               1.35|
+      |         11|               1.36|
+      |         12|               1.38|
+      |         13|               1.38|
+      |         14|               1.39|
+      |         15|               1.40|
+      |         16|               1.40|
+      |         17|               1.39|
+      |         18|               1.38|
+      |         19|               1.39|
+      |         20|               1.40|
+      |         21|               1.42|
+      |         22|               1.43|
+      |         23|               1.42|
+      +-----------+-------------------+
+   ```
+
+
