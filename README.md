@@ -7,14 +7,19 @@ Este projeto implementa um pipeline de dados para processar registros de corrida
 ```
 ifood_nyc_taxi/
 ├── analysis/
-│   ├── perguntas/
-│   │    ├──gold.ipynb
+│   └── perguntas/
+│       └── gold.ipynb
 ├── src/
 │   ├── bronze.ipynb    # Camada de ingestão e transformação inicial
 │   ├── silver.ipynb    # Camada de refinamento e qualidade
-│   ├── test_pipeline.py # Testes automatizados
+│   ├── config.py       # Configurações do projeto
+│   ├── utils.py        # Funções utilitárias
+│   ├── __init__.py     # Inicializador do pacote
 │   └── elt_nyc_taxi.yaml # Configurações do pipeline
-└── requirements.txt    # Dependências do projeto
+├── test/              # Diretório de testes
+├── docs/              # Documentação do projeto
+├── requirements.txt   # Dependências do projeto
+└── .gitignore        # Configurações do Git
 ```
 ## Arquitetura
 ![Pipeline Architecture](docs/images/desenho.png)
