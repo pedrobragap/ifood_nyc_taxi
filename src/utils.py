@@ -2,8 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import coalesce, col, to_date, month, year, lit
 from pyspark.sql.types import LongType, DoubleType, TimestampType, IntegerType
 from datetime import date
-from .config import CASTS, RENAME, SILVER_COLUMNS
-
+from config import CASTS, RENAME
 
 def prepare_silver_df(self, df: DataFrame, start_date: str, end_date: str) -> DataFrame:
     filtered = (
@@ -14,8 +13,6 @@ def prepare_silver_df(self, df: DataFrame, start_date: str, end_date: str) -> Da
             (col("passenger_count") > 0)
         )
     )
-
-    df = filtered.select(*SILVER_COLUMNS).dropDuplicates()
     return df
 
 def month_range(start: date, end: date):
@@ -28,37 +25,37 @@ def month_range(start: date, end: date):
             cur = cur.replace(month=cur.month + 1)
 
 
-def prepare_bronze_df(df: DataFrame, taxi_color: str) -> DataFrame:
+def prepare_bronze_df(df: DataFrame, taxi_color: str, partition_date: str) -> DataFrame:
     rename_exprs = {c: nc for c, nc in RENAME.items() if c in df.columns}
     df = df.withColumnsRenamed(rename_exprs)
 
     cast_exprs = {c: col(c).cast(t) for c, t in CASTS.items() if c in df.columns}
     df = df.withColumns(cast_exprs)
 
-    if "Airport_fee" in df.columns:
-        df = (
-            df
-            .withColumn("airport_fee", coalesce(col("airport_fee"), col("Airport_fee")))
-            .drop("Airport_fee")
-        )
-
     select_cols = [c for c in df.columns if c in CASTS]
+
     df = df.select(*select_cols)
+    
 
     return df.withColumns({
-        "partition_date": to_date(col("tpep_pickup_datetime")),
-        "taxi_color":      lit(taxi_color)
+        "taxi_color":      lit(taxi_color),
+        "partition_date": to_date(lit(partition_date))
     })
 
-def write_delta(self, df: DataFrame, schema: str, table: str):
-    
-    self.sql(f"CREATE DATABASE IF NOT EXISTS {schema}")
+def write_delta(
+    self,
+    df: DataFrame,
+    schema: str,
+    table: str
+) -> None:
+    full_table = f"{schema}.{table}"
 
-    (
-        df.write
-          .format("delta")
-          .mode("overwrite")
-          .option("mergeSchema", "true")
-          .partitionBy("partition_date")
-          .saveAsTable(f"{schema}.{table}")
+    self.sql(f"CREATE DATABASE IF NOT EXISTS {schema}")
+    (df.write
+        .format("delta")
+        .mode("overwrite")
+        .option("mergeSchema", "true")
+        .option("partitionOverwriteMode", "dynamic")
+        .partitionBy("taxi_color", "partition_date")
+        .saveAsTable(full_table)
     )
