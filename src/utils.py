@@ -2,41 +2,10 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import coalesce, col, to_date, month, year, lit
 from pyspark.sql.types import LongType, DoubleType, TimestampType, IntegerType
 from datetime import date
+from .config import CASTS, RENAME, SILVER_COLUMNS
 
 
-CASTS = {
-    "vendor_id": LongType(),        
-    "passenger_count": LongType(),
-    "tpep_pickup_datetime": TimestampType(),
-    "tpep_dropoff_datetime": TimestampType(),
-    "trip_distance": DoubleType(), 
-    "rate_code_id": LongType(),
-    "pu_location_id": LongType(),    
-    "do_location_id": LongType(),
-    "payment_type": LongType(),    
-    "fare_amount": DoubleType(),
-    "extra": DoubleType(),         
-    "mta_tax": DoubleType(),
-    "tip_amount": DoubleType(),    
-    "tolls_amount": DoubleType(),
-    "improvement_surcharge": DoubleType(),
-    "total_amount": DoubleType(),  
-    "congestion_surcharge": DoubleType(),
-    "airport_fee": DoubleType(),
-    "trip_type": IntegerType(),
-    "ehail_fee": LongType(),
-}
-
-RENAME = {
-    "VendorID": "vendor_id",        
-    "RatecodeID": "rate_code_id",
-    "PULocationID": "pu_location_id",    
-    "DOLocationID": "do_location_id",
-    "lpep_pickup_datetime":"tpep_pickup_datetime",
-    "lpep_dropoff_datetime": "tpep_dropoff_datetime"
-}
-
-def prepare_silver_df(self,df: DataFrame, start_date: str, end_date: str) -> DataFrame:
+def prepare_silver_df(self, df: DataFrame, start_date: str, end_date: str) -> DataFrame:
     filtered = (
         df
         .filter(
@@ -45,19 +14,9 @@ def prepare_silver_df(self,df: DataFrame, start_date: str, end_date: str) -> Dat
             (col("passenger_count") > 0)
         )
     )
-    selected_cols = [
-        "vendor_id",
-        "passenger_count",
-        "total_amount",
-        "tpep_pickup_datetime",
-        "tpep_dropoff_datetime",
-        "taxi_color",
-        "partition_date"
-    ]
 
-    df = filtered.select(*selected_cols).dropDuplicates()
-
-    return df 
+    df = filtered.select(*SILVER_COLUMNS).dropDuplicates()
+    return df
 
 def month_range(start: date, end: date):
     cur = start.replace(day=1)
