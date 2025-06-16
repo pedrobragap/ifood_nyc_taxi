@@ -9,7 +9,6 @@ ifood_nyc_taxi/
 ├── analysis/
 │   ├── perguntas/
 │   │    ├──gold.ipynb
-│   ├──EDA.ipynb
 ├── src/
 │   ├── bronze.ipynb    # Camada de ingestão e transformação inicial
 │   ├── silver.ipynb    # Camada de refinamento e qualidade
